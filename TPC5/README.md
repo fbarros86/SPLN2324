@@ -1,4 +1,4 @@
-# Script para retribuir tweets por ID
+# Script para analisar tipos de palavras de textos
 
 ## Autor
 Francisca Quintas Monteiro de Barros
