@@ -1,13 +1,18 @@
 # pip install -U spacy
 # python -m spacy download en_core_web_sm
 import spacy
+import sys
+from spacy import displacy
 
 nlp = spacy.load("pt_core_news_lg")
 
-text = ("O Roberto e a Roberta foram passear a Viana do Castelo e deixaram a porta aberta. A gata deles, a Alberta, fugiu. ")
-doc = nlp(text)
+with open(sys.argv[1]) as file:
+    content = file.read()
 
+doc = nlp(content)
 
+# displacy.serve(doc,style="dep")
+# https://universaldependencies.org/u/pos/
 translate = {"ADJ":"adjetivo",
              "ADP":"proposição",
              "ADV":"advérbio",
@@ -24,22 +29,23 @@ translate = {"ADJ":"adjetivo",
             "SCONJ": "conjunção subordinada",
             "SYM": "simbolo",
             "VERB": "verbo",
-            "X": "outro"
+            "X": "outro",
+            "SPACE": "espaço"
              }
 
 
-print("| Palavra | Tipo | Lema |\n|----|--------|----|")
-current_entity = []
-for token in doc:
-    if token.ent_iob_ != "I" and current_entity:
-        print("|","".join(current_entity),"|", "nome próprio","|","".join(current_entity),"|")
-        current_entity = []
-    if token.ent_iob_ == "B":            
-        current_entity.append(token.text_with_ws)
-    elif token.ent_iob_ == "I":
-        current_entity.append(token.text_with_ws)
-    elif token.pos_!="PUNCT":
-        print("|",token.text,"|", translate[token.pos_],"|",token.lemma_,"|")
-if current_entity:
-    print("|","".join(current_entity),"|", "nome próprio","|","".join(current_entity),"|")
+with doc.retokenize() as retokenizer:
+    for entity in doc.ents:
+        retokenizer.merge(entity)
+        
+
+print("| Palavra | Tipo | Lema |Dep|Children|\n|----|--------|----|--------|--------|")
+for sentence in doc.sents:
+    for token in sentence:
+        if token.pos_=="PROPN":
+             print("|",token.text,"|", translate[token.pos_],"|",token.ent_type_,"|",token.dep_,"|",list(token.children),"|")
+        elif token.pos_!="PUNCT" and token.pos_!="SPACE" :
+             print("|",token.text,"|", translate[token.pos_],"|",token.lemma_,"|",token.dep_,"|",list(token.children),"|")
+    print("|---- | ----|---- | ---- | ---- |")
+
     
